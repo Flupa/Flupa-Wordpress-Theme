@@ -14,4 +14,3 @@ It's a part of a community driven project , the [Website Makeover (fr)](http://f
 ## Screenshot
 
 ## Changelog
-
