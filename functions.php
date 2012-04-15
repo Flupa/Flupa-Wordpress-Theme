@@ -64,7 +64,7 @@ if ( function_exists('add_theme_support') ) {
 /**
  * CUSTOMS POSTS
  */
-add_action( 'init', 'create_post_type' );
+add_action( 'after_setup_theme', 'create_post_type' );
 
 
 function create_post_type() {
