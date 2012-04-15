@@ -134,7 +134,7 @@ function create_post_type() {
         'description' => 'We sometimes make some giveaway.',
         'public' => true,
         'rewrite' => array('slug' => 'giveaway','with_front' => FALSE),
-        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/goveaway.png',
+        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/giveaway.png',
         'show_in_menu' => true,
         'menu_position' => 5,
         'supports' => array('title','editor','excerpt','revisions','comments','trackbacks'),
