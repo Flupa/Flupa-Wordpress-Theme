@@ -68,7 +68,10 @@ add_action( 'after_setup_theme', 'create_post_type' );
 
 
 function create_post_type() {
-    register_post_type( 'Events',
+    /**
+     * Evenements
+     */
+    register_post_type( 'event',
         array(
         'labels' => array(
             'name' => __( 'Events' ),
@@ -93,6 +96,21 @@ function create_post_type() {
         'taxonomies' => array('post_tag')
         )
     );
+    register_taxonomy('Antenne', 'event', array(
+        'hierarchical' => true,
+        'label' => __('Antenne'),
+        'query_var' => true,
+        'rewrite' => true
+        ));
+    register_taxonomy('Type', 'event', array(
+        'hierarchical' =>true,
+        'label' => __("Type d'évenement"),
+        'query_var' => true,
+        'rewrite' => true
+        ));
+    /**
+     * Jobs
+     */
     register_post_type( 'Jobs',
         array(
         'labels' => array(
