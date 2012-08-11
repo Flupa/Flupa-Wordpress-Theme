@@ -60,7 +60,81 @@ if ( function_exists('add_theme_support') ) {
     add_image_size( 'video_c' , 210, 118, true );
     add_image_size( 'video_p' , 80, 60, true);*/
 }
+/**
+ * taxonomies
+ */
+add_action( 'init', 'register_taxonomy_antennes' );
 
+function register_taxonomy_antennes() {
+
+    $labels = array( 
+        'name' => _x( 'Antennes', 'antennes' ),
+        'singular_name' => _x( 'Antenne', 'antennes' ),
+        'search_items' => _x( 'Search Antennes', 'antennes' ),
+        'popular_items' => _x( 'Popular Antennes', 'antennes' ),
+        'all_items' => _x( 'All Antennes', 'antennes' ),
+        'parent_item' => _x( 'Parent Antenne', 'antennes' ),
+        'parent_item_colon' => _x( 'Parent Antenne:', 'antennes' ),
+        'edit_item' => _x( 'Edit Antenne', 'antennes' ),
+        'update_item' => _x( 'Update Antenne', 'antennes' ),
+        'add_new_item' => _x( 'Add New Antenne', 'antennes' ),
+        'new_item_name' => _x( 'New Antenne', 'antennes' ),
+        'separate_items_with_commas' => _x( 'Paris,Metz,Luxembourg,Grenoble,Nice,Rennes,Toulouse', 'antennes' ),
+        'add_or_remove_items' => _x( 'Add or remove antennes', 'antennes' ),
+        'choose_from_most_used' => _x( 'Choose from the most used antennes', 'antennes' ),
+        'menu_name' => _x( 'Antennes', 'antennes' ),
+    );
+
+    $args = array( 
+        'labels' => $labels,
+        'public' => true,
+        'show_in_nav_menus' => true,
+        'show_ui' => true,
+        'show_tagcloud' => true,
+        'hierarchical' => true,
+
+        'rewrite' => true,
+        'query_var' => true
+    );
+
+    register_taxonomy( 'antennes', array('event'), $args );
+}
+add_action( 'init', 'register_taxonomy_types' );
+
+function register_taxonomy_types() {
+
+    $labels = array( 
+        'name' => _x( 'Types', 'types' ),
+        'singular_name' => _x( 'Type', 'types' ),
+        'search_items' => _x( 'Search Types', 'types' ),
+        'popular_items' => _x( 'Popular Types', 'types' ),
+        'all_items' => _x( 'All Types', 'types' ),
+        'parent_item' => _x( 'Parent Type', 'types' ),
+        'parent_item_colon' => _x( 'Parent Type:', 'types' ),
+        'edit_item' => _x( 'Edit Type', 'types' ),
+        'update_item' => _x( 'Update Type', 'types' ),
+        'add_new_item' => _x( 'Add New Type', 'types' ),
+        'new_item_name' => _x( 'New Type', 'types' ),
+        'separate_items_with_commas' => _x( 'Separate types with commas', 'types' ),
+        'add_or_remove_items' => _x( 'Add or remove types', 'types' ),
+        'choose_from_most_used' => _x( 'Choose from the most used types', 'types' ),
+        'menu_name' => _x( 'Types', 'types' ),
+    );
+
+    $args = array( 
+        'labels' => $labels,
+        'public' => true,
+        'show_in_nav_menus' => true,
+        'show_ui' => true,
+        'show_tagcloud' => true,
+        'hierarchical' => true,
+
+        'rewrite' => true,
+        'query_var' => true
+    );
+
+    register_taxonomy( 'types', array('event'), $args );
+}
 /**
  * CUSTOMS POSTS
  */
@@ -71,43 +145,43 @@ function create_post_type() {
     /**
      * Evenements
      */
-    register_post_type( 'event',
-        array(
-        'labels' => array(
-            'name' => __( 'Events' ),
-            'singular_name' => __( 'Event' ),
-            'add_new_item' => __('Add New Event'),
-            'edit_item' => __('Edit Event'),
-            'new_item' => __('New Event'),
-            'view_item' => __('View Event'),
-            'search_items' => __('Search Events'),
-            'not_found' => __('No events found'),
-            'not_found_in_trash' => __('No events found in Trash')
-            ),
-        'description' => 'Events occured all around the world and Usability relative',
-        'public' => true,
-        'rewrite' => array('slug' => 'events','with_front' => FALSE),
-        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/events.png',
-        'show_in_menu' => true,
-        'menu_position' => 5,
-        'supports' => array('title','editor','excerpt','revisions','comments','trackbacks'),
-        'has_archive' => true,
-        'capability_type' => 'post',
-        'taxonomies' => array('post_tag')
-        )
-    );
-    register_taxonomy('Antenne', 'event', array(
-        'hierarchical' => true,
-        'label' => __('Antenne'),
-        'query_var' => true,
-        'rewrite' => true
-        ));
-    register_taxonomy('Type', 'event', array(
-        'hierarchical' =>true,
-        'label' => __("Type d'évenement"),
-        'query_var' => true,
-        'rewrite' => true
-        ));
+        $labels = array( 
+            'name' => _x( 'Events', 'event' ),
+            'singular_name' => _x( 'Event', 'event' ),
+            'add_new' => _x( 'Add New', 'event' ),
+            'add_new_item' => _x( 'Add New Event', 'event' ),
+            'edit_item' => _x( 'Edit Event', 'event' ),
+            'new_item' => _x( 'New Event', 'event' ),
+            'view_item' => _x( 'View Event', 'event' ),
+            'search_items' => _x( 'Search Events', 'event' ),
+            'not_found' => _x( 'No events found', 'event' ),
+            'not_found_in_trash' => _x( 'No events found in Trash', 'event' ),
+            'parent_item_colon' => _x( 'Parent Event:', 'event' ),
+            'menu_name' => _x( 'Events', 'event' ),
+        );
+
+        $args = array( 
+            'labels' => $labels,
+            'hierarchical' => false,
+            'description' => 'Events occured all around the world and Usability relative',
+            'supports' => array( 'title', 'editor', 'custom-fields', 'comments', 'page-attributes' ),
+            'taxonomies' => array( 'post_tag', 'antenne', 'type' ),
+            'public' => true,
+            'show_ui' => true,
+            'show_in_menu' => true,
+            'menu_position' => 5,
+            'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/events.png',
+            'show_in_nav_menus' => true,
+            'publicly_queryable' => true,
+            'exclude_from_search' => false,
+            'has_archive' => true,
+            'query_var' => true,
+            'can_export' => true,
+            'rewrite' => true,
+            'capability_type' => 'post'
+        );
+
+    register_post_type( 'event', $args );
     /**
      * Jobs
      */
@@ -131,11 +205,12 @@ function create_post_type() {
         'show_in_menu' => true,
         'menu_position' => 5,
         'supports' => array('title','editor','excerpt','revisions','trackbacks'),
-        'has_archive' => true,
-        'capability_type' => 'post',
-        'taxonomies' => array('post_tag')
+        'has_archive' => true
         )
     );
+    /**
+     * Contest
+     */
     register_post_type( 'Contest',
         array(
         'labels' => array(
@@ -157,8 +232,7 @@ function create_post_type() {
         'menu_position' => 5,
         'supports' => array('title','editor','excerpt','revisions','comments','trackbacks'),
         'has_archive' => true,
-        'capability_type' => 'post',
-        'taxonomies' => array('post_tag')
+        'capability_type' => 'post'
         )
     );
     register_post_type( 'Book',
