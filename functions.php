@@ -61,7 +61,80 @@ if ( function_exists('add_theme_support') ) {
     add_image_size( 'video_p' , 80, 60, true);*/
 }
 /**
- * taxonomies
+ * Fonction de récupération de géopoint google maps
+ */
+function get_coords($a){
+  // je construit une URL avec l'adresse
+  $map_url = 'http://maps.google.com/maps/api/geocode/json?address='.urlencode($a).'&sensor=false';
+  // je récupère ça
+  $request = wp_remote_get($map_url);
+  $json = wp_remote_retrieve_body($request);
+
+  // si c'est vide, je kill...
+  if(empty($json))return false;
+
+  // je parse et je choppe la latitude et la longitude du premier element
+  $json = json_decode($json);
+  $lat = $json->results[0]->geometry->location->lat;
+  $long = $json->results[0]->geometry->location->lng;
+  // je retourne les valeurs sous forme de tableau
+  return compact($lat,$long,array('lat','long'));
+}
+/**
+ * META BOXES
+ */
+function add_events_metaboxes(){
+    add_meta_box('wpt_events_properties', 'Event Properties', 'wpt_events_properties', 'event', 'side', 'default');
+}
+function wpt_events_properties() {
+    global $post;
+    // Noncename needed to verify where the data originated
+    echo '<input type="hidden" name="eventmeta_noncename" id="eventmeta_noncename" value="' .wp_create_nonce( plugin_basename(__FILE__) ). '" />';
+    // Get the location data if its already been entered
+    $location = get_post_meta($post->ID, '_location', true);
+    $price = get_post_meta($post->ID, '_price', true);
+    $lang = get_post_meta($post->ID, '_lang', true);
+    $date = get_post_meta($post->ID, '_date', true);
+    $gps = get_post_meta($post->ID, '_gps', true);
+    // Echo out the field
+    echo '<label for="_date">'. _x( 'Date', 'antennes' ).'</label>';
+    echo '<input type="text" name="date" class="widefat" value="'.$date.'"/>';
+    echo '<label for="_location">'. _x( 'Adresse', 'antennes' ).'</label>';
+    echo '<textarea type="text" name="_location" class="widefat">'.$location.'</textarea>';
+    echo '<input type="text" name="_gps" class="widefat" value="'.$gps['lat'].' , '.$gps['long'].'" disabled="disabled" />';
+    echo '<label for="_price">'. _x( 'Prix', 'antennes').'</label>';
+    echo '<input type="text" name="_price" value="'.$price.'" class="widefat" />';
+    echo '<label for="_lang">'. _x( 'Language', 'antennes').'</label>';
+    echo '<select name="_lang" class="widefat">';
+    echo '<option value="french" '.selected($lang,"french").' >'. _x('Français','antennes').'</option>
+        <option value="english" '.selected($lang,"english").' >'. _x('Anglais','antennes').'</option>
+        <option value="luxemburgish" '.selected($lang,"luxemburgish").' >'. _x('Luxembourgeois','antennes').'</option>
+        <option value="deutch" '.selected($lang,"deutch").' >'. _x('Allemand','antennes').'</option>
+    </select>';
+}
+
+function wpt_save_events_meta($post_id, $post) {
+    // verify this came from the our screen and with proper authorization,
+    // because save_post can be triggered at other times
+    if ( !wp_verify_nonce( $_POST['eventmeta_noncename'], plugin_basename(__FILE__) )) {
+        return $post->ID;
+    }
+    // Is the user allowed to edit the post or page?
+    if ( !current_user_can( 'edit_post', $post->ID ))return $post->ID;
+    // OK, we're authenticated: we need to find and save the data
+    if(isset($_POST['_location'])){
+        update_post_meta($post->ID,'_location',esc_html($_POST['_location']));
+        $coords = get_coords(esc_html($_POST['_location']));
+        if($coords!='')update_post_meta($post->ID,'_gps',$coords);
+    }
+    if(isset($_POST['_lang']))update_post_meta($post->ID,'_lang',esc_html($_POST['_lang']));
+    if(isset($_POST['_price']))update_post_meta($post->ID,'_price',esc_html($_POST['_price']));
+    if(isset($_POST['_date']))update_post_meta($post->ID,'_date',esc_html($_POST['_date']));
+}
+add_action('save_post', 'wpt_save_events_meta', 1, 2); // save the custom fields
+
+/**
+ * TAXONOMIES
  */
 add_action( 'init', 'register_taxonomy_antennes' );
 
@@ -79,12 +152,11 @@ function register_taxonomy_antennes() {
         'update_item' => _x( 'Update Antenne', 'antennes' ),
         'add_new_item' => _x( 'Add New Antenne', 'antennes' ),
         'new_item_name' => _x( 'New Antenne', 'antennes' ),
-        'separate_items_with_commas' => _x( 'Paris,Metz,Luxembourg,Grenoble,Nice,Rennes,Toulouse', 'antennes' ),
+        'separate_items_with_commas' => _x( 'Separates Antennes with commas', 'antennes' ),
         'add_or_remove_items' => _x( 'Add or remove antennes', 'antennes' ),
         'choose_from_most_used' => _x( 'Choose from the most used antennes', 'antennes' ),
         'menu_name' => _x( 'Antennes', 'antennes' ),
     );
-
     $args = array( 
         'labels' => $labels,
         'public' => true,
@@ -92,7 +164,6 @@ function register_taxonomy_antennes() {
         'show_ui' => true,
         'show_tagcloud' => true,
         'hierarchical' => true,
-
         'rewrite' => true,
         'query_var' => true
     );
@@ -145,46 +216,47 @@ function create_post_type() {
     /**
      * Evenements
      */
-        $labels = array( 
-            'name' => _x( 'Events', 'event' ),
-            'singular_name' => _x( 'Event', 'event' ),
-            'add_new' => _x( 'Add New', 'event' ),
-            'add_new_item' => _x( 'Add New Event', 'event' ),
-            'edit_item' => _x( 'Edit Event', 'event' ),
-            'new_item' => _x( 'New Event', 'event' ),
-            'view_item' => _x( 'View Event', 'event' ),
-            'search_items' => _x( 'Search Events', 'event' ),
-            'not_found' => _x( 'No events found', 'event' ),
-            'not_found_in_trash' => _x( 'No events found in Trash', 'event' ),
-            'parent_item_colon' => _x( 'Parent Event:', 'event' ),
-            'menu_name' => _x( 'Events', 'event' ),
-        );
+    $labels = array( 
+        'name' => _x( 'Events', 'event' ),
+        'singular_name' => _x( 'Event', 'event' ),
+        'add_new' => _x( 'Add New', 'event' ),
+        'add_new_item' => _x( 'Add New Event', 'event' ),
+        'edit_item' => _x( 'Edit Event', 'event' ),
+        'new_item' => _x( 'New Event', 'event' ),
+        'view_item' => _x( 'View Event', 'event' ),
+        'search_items' => _x( 'Search Events', 'event' ),
+        'not_found' => _x( 'No events found', 'event' ),
+        'not_found_in_trash' => _x( 'No events found in Trash', 'event' ),
+        'parent_item_colon' => _x( 'Parent Event:', 'event' ),
+        'menu_name' => _x( 'Events', 'event' ),
+    );
 
-        $args = array( 
-            'labels' => $labels,
-            'hierarchical' => false,
-            'description' => 'Events occured all around the world and Usability relative',
-            'supports' => array( 'title', 'editor', 'custom-fields', 'comments', 'page-attributes' ),
-            'taxonomies' => array( 'post_tag', 'antenne', 'type' ),
-            'public' => true,
-            'show_ui' => true,
-            'show_in_menu' => true,
-            'menu_position' => 5,
-            'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/events.png',
-            'show_in_nav_menus' => true,
-            'publicly_queryable' => true,
-            'exclude_from_search' => false,
-            'has_archive' => true,
-            'query_var' => true,
-            'can_export' => true,
-            'rewrite' => true,
-            'capability_type' => 'post'
-        );
-
+    $args = array( 
+        'labels' => $labels,
+        'hierarchical' => false,
+        'description' => 'Events occured all around the world and Usability relative',
+        'supports' => array( 'title', 'editor', 'custom-fields', 'comments' ),
+        'taxonomies' => array( 'post_tag'),
+        'public' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'menu_position' => 5,
+        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/events.png',
+        'show_in_nav_menus' => true,
+        'publicly_queryable' => true,
+        'exclude_from_search' => false,
+        'has_archive' => true,
+        'query_var' => true,
+        'can_export' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'register_meta_box_cb' => 'add_events_metaboxes'
+    );
     register_post_type( 'event', $args );
     /**
      * Jobs
      */
+    
     register_post_type( 'Jobs',
         array(
         'labels' => array(
@@ -235,31 +307,49 @@ function create_post_type() {
         'capability_type' => 'post'
         )
     );
-    register_post_type( 'Book',
-        array(
-        'labels' => array(
-            'name' => __( 'Books' ),
-            'singular_name' => __( 'Book' ),
-            'add_new_item' => __('Add New Book'),
-            'edit_item' => __('Edit Book'),
-            'new_item' => __('New Book'),
-            'view_item' => __('View Book'),
-            'search_items' => __('Search Book Offer'),
-            'not_found' => __('No books found'),
-            'not_found_in_trash' => __('No books found in Trash')
-            ),
+    /**
+     * Books
+     */
+    $labels = array( 
+        'name' => _x( 'Books', 'book' ),
+        'singular_name' => _x( 'Book', 'book' ),
+        'add_new' => _x( 'Add New', 'book' ),
+        'add_new_item' => _x( 'Add New Book', 'book' ),
+        'edit_item' => _x( 'Edit Book', 'book' ),
+        'new_item' => _x( 'New Book', 'book' ),
+        'view_item' => _x( 'View Book', 'book' ),
+        'search_items' => _x( 'Search Books', 'book' ),
+        'not_found' => _x( 'No books found', 'book' ),
+        'not_found_in_trash' => _x( 'No books found in Trash', 'book' ),
+        'parent_item_colon' => _x( 'Parent Book:', 'book' ),
+        'menu_name' => _x( 'Books', 'book' ),
+    );
+
+    $args = array( 
+        'labels' => $labels,
+        'hierarchical' => false,
         'description' => 'Reading is Good. And there\'s some good book about Usability, UX & Design.',
+        'supports' => array( 'title', 'editor', 'excerpt', 'thumbnail', 'custom-fields' ),
+        'taxonomies' => array( 'category', 'post_tag' ),
         'public' => true,
-        'rewrite' => array('slug' => 'books','with_front' => FALSE),
-        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/books.png',
+        'show_ui' => true,
         'show_in_menu' => true,
         'menu_position' => 5,
-        'supports' => array('title','editor','thumbnail','excerpt','revisions','comments','trackbacks'),
+        'menu_icon' => get_bloginfo('stylesheet_directory').'/img/custompost/books.png',
+        'show_in_nav_menus' => true,
+        'publicly_queryable' => true,
+        'exclude_from_search' => false,
         'has_archive' => true,
-        'capability_type' => 'post',
-        'taxonomies' => array('post_tag')
-        )
+        'query_var' => true,
+        'can_export' => true,
+        'rewrite' => true,
+        'capability_type' => 'post'
     );
+
+    register_post_type( 'book', $args );
+    /**
+     * Sponsor
+     */
     register_post_type( 'Sponsor',
         array(
         'labels' => array(
