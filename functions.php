@@ -30,12 +30,26 @@ function flupa_wordpress_theme_setup() {
 	 * Custom template tags for this theme.
 	 */
 	require( get_template_directory() . '/inc/template-tags.php' );
-
+	
+	/**
+	 * Remove some talkative tags from source code
+	 */
+	remove_action('wp_head','wp_generator');
+	remove_action('wp_head','wlwmanifest_link');
+	remove_action('wp_head','rsd_link');
+	
 	/**
 	 * Custom functions that act independently of the theme templates
 	 */
-	//require( get_template_directory() . '/inc/tweaks.php' );
+	require( get_template_directory() . '/inc/tweaks.php' );
 
+	/**
+	 * Customs Post Types
+	 */
+	 require (get_template_directory()) . '/inc/custom-type/taxonomies.php';
+	 require (get_template_directory()) . '/inc/custom-type/events.php';
+	 require (get_template_directory()) . '/inc/custom-type/books.php';
+	
 	/**
 	 * Custom Theme Options
 	 */

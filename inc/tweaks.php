@@ -50,3 +50,24 @@ function flupa_wordpress_theme_enhanced_image_navigation( $url, $id ) {
 	return $url;
 }
 add_filter( 'attachment_link', 'flupa_wordpress_theme_enhanced_image_navigation', 10, 2 );
+
+/**
+ * Fonction de récupération de géopoint google maps
+ */
+function get_coords($a){
+  // je construit une URL avec l'adresse
+  $map_url = 'http://maps.google.com/maps/api/geocode/json?address='.urlencode($a).'&sensor=false';
+  // je récupère ça
+  $request = wp_remote_get($map_url);
+  $json = wp_remote_retrieve_body($request);
+
+  // si c'est vide, je kill...
+  if(empty($json))return false;
+
+  // je parse et je choppe la latitude et la longitude du premier element
+  $json = json_decode($json);
+  $lat = $json->results[0]->geometry->location->lat;
+  $long = $json->results[0]->geometry->location->lng;
+  // je retourne les valeurs sous forme de tableau
+  return compact($lat,$long,array('lat','long'));
+}
